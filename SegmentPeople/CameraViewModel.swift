@@ -75,7 +75,6 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     
     func startSession() {
         guard !isSessionRunning else { return }
-        
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             self?.session.startRunning()
             DispatchQueue.main.async {
@@ -98,19 +97,18 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        Task {
-            let result = await  CoreMLHelper.processSampleBufferWithFilters(sampleBuffer)
-            let context = CIContext()
-            guard let result, let pixelBuffer = CMSampleBufferGetImageBuffer(result) else { return }
-            let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-
-            if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-                DispatchQueue.main.async {
-                    self.segmentationMask = cgImage
-                }
-            }
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer), let personSegmentationRequest else {
+            return
         }
         
+        let result = CoreMLHelper.peopleSegmentation(imageBuffer: pixelBuffer, request: personSegmentationRequest)
+        let ciImage = CIImage(cvPixelBuffer: result)
+        let context = CIContext(options: nil)
+        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            DispatchQueue.main.async {
+                self.segmentationMask = cgImage
+            }
+        }
 //
 //        do {
 //            guard let request = personSegmentationRequest else { return }
