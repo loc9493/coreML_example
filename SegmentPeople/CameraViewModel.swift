@@ -171,13 +171,13 @@ struct CameraView: View {
                 if let mask = cameraViewModel.segmentationMask {
                     Image(mask, scale: 1.0, label: Text("Segmentation Mask"))
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .ignoresSafeArea()
-                        .blendMode(.multiply)
-                        .frame(maxWidth: .infinity, minHeight: 300)
+                        .aspectRatio(contentMode: .fit)
+//                        .ignoresSafeArea()
+//                        .frame(maxWidth: .infinity, minHeight: 300)
+                        .border(.red, width: 1)
                 }
             }
-//            .background(.red)
+//            .background(.white)
         }
         .onAppear {
             cameraViewModel.startSession()
