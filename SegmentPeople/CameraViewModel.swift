@@ -152,7 +152,8 @@ struct CameraPreview: UIViewRepresentable {
 
 struct CameraView: View {
     @StateObject private var cameraViewModel = CameraViewModel()
-    
+    let ranges = (1...26).map { "IMG\($0)" }
+    @State var selectedImage = ""
     var body: some View {
         VStack {
             ZStack {
@@ -165,19 +166,29 @@ struct CameraView: View {
                         .foregroundColor(.red)
                         .padding()
                 }
+                Button {
+                    self.selectedImage = ranges.randomElement() ?? ""
+                } label: {
+                    Text("Next")
+                }
+
             }
             .frame(maxWidth: .infinity, minHeight: 300)
-            VStack {
-                if let mask = cameraViewModel.segmentationMask {
-                    Image(mask, scale: 1.0, label: Text("Segmentation Mask"))
+            AdvancedDraggableResizableView {
+                ZStack {
+                    Image(selectedImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
-//                        .ignoresSafeArea()
-//                        .frame(maxWidth: .infinity, minHeight: 300)
-                        .border(.red, width: 1)
+                        .aspectRatio(contentMode: .fill)
+                    VStack {
+                        if let mask = cameraViewModel.segmentationMask {
+                            Image(mask, scale: 1.0, label: Text("Segmentation Mask"))
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .border(.red, width: 1)
+                        }
+                    }
                 }
             }
-//            .background(.white)
         }
         .onAppear {
             cameraViewModel.startSession()
