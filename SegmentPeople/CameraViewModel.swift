@@ -98,40 +98,52 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        
-        do {
-            guard let request = personSegmentationRequest else { return }
-            
-            let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
-            try handler.perform([request])
-            
-            guard let mask = request.results?.first?.pixelBuffer else { return }
+        Task {
+            let result = await  CoreMLHelper.processSampleBufferWithFilters(sampleBuffer)
+            let context = CIContext()
+            guard let result, let pixelBuffer = CMSampleBufferGetImageBuffer(result) else { return }
+            let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
 
-            // Convert mask to CGImage for display
-            let ciImage = CIImage(cvPixelBuffer: mask)
-            let orgFrame = CIImage(cvPixelBuffer: pixelBuffer)
-            let context = CIContext(options: nil)
-            
-            
-            
-            
-            // scale mask
-             let maskScaleX = orgFrame.extent.width / ciImage.extent.width
-             let maskScaleY = orgFrame.extent.height / ciImage.extent.height
-             let maskScaled = ciImage.transformed(by: __CGAffineTransformMake(maskScaleX, 0, 0, maskScaleY, 0, 0))
-
-            let resultImage = applyMask(mask: maskScaled, to: orgFrame)
-
-            if let cgImage = context.createCGImage(resultImage, from: resultImage.extent) {
+            if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
                 DispatchQueue.main.async {
                     self.segmentationMask = cgImage
                 }
             }
-            
-        } catch {
-            print("Error performing person segmentation: \(error)")
         }
+        
+//
+//        do {
+//            guard let request = personSegmentationRequest else { return }
+//            
+//            let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
+//            try handler.perform([request])
+//            
+//            guard let mask = request.results?.first?.pixelBuffer else { return }
+//
+//            // Convert mask to CGImage for display
+//            let ciImage = CIImage(cvPixelBuffer: mask)
+//            let orgFrame = CIImage(cvPixelBuffer: pixelBuffer)
+//            let context = CIContext(options: nil)
+//            
+//            
+//            
+//            
+//            // scale mask
+//             let maskScaleX = orgFrame.extent.width / ciImage.extent.width
+//             let maskScaleY = orgFrame.extent.height / ciImage.extent.height
+//             let maskScaled = ciImage.transformed(by: __CGAffineTransformMake(maskScaleX, 0, 0, maskScaleY, 0, 0))
+//
+//            let resultImage = applyMask(mask: maskScaled, to: orgFrame)
+//
+//            if let cgImage = context.createCGImage(resultImage, from: resultImage.extent) {
+//                DispatchQueue.main.async {
+//                    self.segmentationMask = cgImage
+//                }
+//            }
+//            
+//        } catch {
+//            print("Error performing person segmentation: \(error)")
+//        }
     }
 }
 
@@ -152,8 +164,8 @@ struct CameraPreview: UIViewRepresentable {
 
 struct CameraView: View {
     @StateObject private var cameraViewModel = CameraViewModel()
-    let ranges = (1...26).map { "IMG\($0)" }
-    @State var selectedImage = ""
+    let ranges = (1...9).map { "IMG\($0)" }
+    @State var selectedImage = "IMG8"
     var body: some View {
         VStack {
             ZStack {
