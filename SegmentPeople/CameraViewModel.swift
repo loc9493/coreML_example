@@ -19,6 +19,7 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     
     let session = AVCaptureSession()
     let videoOutput = AVCaptureVideoDataOutput()
+    let personSegmentFilter = CIFilter.personSegmentation()
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var personSegmentationRequest: VNGeneratePersonSegmentationRequest?
     
@@ -74,6 +75,7 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
     
     func startSession() {
+        personSegmentFilter.qualityLevel = 1
         guard !isSessionRunning else { return }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             self?.session.startRunning()
@@ -100,48 +102,15 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer), let personSegmentationRequest else {
             return
         }
-        
-        let result = CoreMLHelper.peopleSegmentation(imageBuffer: pixelBuffer, request: personSegmentationRequest)
-        let ciImage = CIImage(cvPixelBuffer: result)
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         let context = CIContext(options: nil)
-        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+//        let output = CoreMLHelper.peopleSegmentation(filter: personSegmentFilter)(ciImage)
+        let output = CoreMLHelper.peopleSegmentation(request: personSegmentationRequest)(ciImage)
+        if let output, let cgImage = context.createCGImage(output, from: output.extent) {
             DispatchQueue.main.async {
                 self.segmentationMask = cgImage
             }
         }
-//
-//        do {
-//            guard let request = personSegmentationRequest else { return }
-//            
-//            let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
-//            try handler.perform([request])
-//            
-//            guard let mask = request.results?.first?.pixelBuffer else { return }
-//
-//            // Convert mask to CGImage for display
-//            let ciImage = CIImage(cvPixelBuffer: mask)
-//            let orgFrame = CIImage(cvPixelBuffer: pixelBuffer)
-//            let context = CIContext(options: nil)
-//            
-//            
-//            
-//            
-//            // scale mask
-//             let maskScaleX = orgFrame.extent.width / ciImage.extent.width
-//             let maskScaleY = orgFrame.extent.height / ciImage.extent.height
-//             let maskScaled = ciImage.transformed(by: __CGAffineTransformMake(maskScaleX, 0, 0, maskScaleY, 0, 0))
-//
-//            let resultImage = applyMask(mask: maskScaled, to: orgFrame)
-//
-//            if let cgImage = context.createCGImage(resultImage, from: resultImage.extent) {
-//                DispatchQueue.main.async {
-//                    self.segmentationMask = cgImage
-//                }
-//            }
-//            
-//        } catch {
-//            print("Error performing person segmentation: \(error)")
-//        }
     }
 }
 
@@ -196,6 +165,7 @@ struct CameraView: View {
                                 .aspectRatio(contentMode: .fit)
                                 .border(.red, width: 1)
                         }
+                        
                     }
                 }
             }
