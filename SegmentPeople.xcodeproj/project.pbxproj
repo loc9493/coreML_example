@@ -75,10 +75,10 @@
 		57073EE72DB68CBA00503223 = {
 			isa = PBXGroup;
 			children = (
-				57073EF22DB68CBA00503223 /* SegmentPeople */,
 				57073F032DB68CBC00503223 /* SegmentPeopleTests */,
 				57073F0D2DB68CBC00503223 /* SegmentPeopleUITests */,
 				57073EF12DB68CBA00503223 /* Products */,
+				57073EF22DB68CBA00503223 /* SegmentPeople */,
 			);
 			sourceTree = "<group>";
 		};

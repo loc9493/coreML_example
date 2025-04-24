@@ -63,21 +63,6 @@ class ImageFilterPipeline {
 }
 
 struct CoreMLHelper {
-    static func getAllCIFilters() -> [String: [String: Any]] {
-        // Get all filter names
-        let filterNames = CIFilter.filterNames(inCategory: nil)
-        var filterInfo: [String: [String: Any]] = [:]
-        
-        for name in filterNames {
-            guard let filter = CIFilter(name: name) else { continue }
-            
-            // Get filter attributes
-            let attributes = filter.attributes
-            filterInfo[name] = attributes
-        }
-        
-        return filterInfo
-    }
     static func createProcessingPipeline(with segmentationRequest: VNGeneratePersonSegmentationRequest) -> ImageFilterPipeline {
         let pipeline = ImageFilterPipeline()
         
@@ -87,23 +72,35 @@ struct CoreMLHelper {
         pipeline.addFilter(peopleSegmentation(request: segmentationRequest))
         
         // 2. Add a sepia tone filter
-        pipeline.addFilter { image in
-            guard let image = image else { return nil }
-            let sepiaFilter = CIFilter.sepiaTone()
-            sepiaFilter.inputImage = image
-            sepiaFilter.intensity = 0.8
-            return sepiaFilter.outputImage
-        }
-        
+//        pipeline.addFilter { image in
+//            guard let image = image else { return nil }
+//            let sepiaFilter = CIFilter.sepiaTone()
+//            sepiaFilter.inputImage = image
+//            sepiaFilter.intensity = 0.8
+//            return sepiaFilter.outputImage
+//        }
         // 3. Add a vignette effect
         pipeline.addFilter { image in
             guard let image = image else { return nil }
-            let vignetteFilter = CIFilter.vignette()
+            let vignetteFilter = CIFilter.zoomBlur()
             vignetteFilter.inputImage = image
-            vignetteFilter.intensity = 0.7
-            vignetteFilter.radius = 1.0
+            vignetteFilter.setValue(30, forKey: "inputAmount")
+            vignetteFilter.setValue(CIVector(x: 350, y: 200), forKey: "inputCenter")
+//            vignetteFilter.center = .init(x: 200, y: 500)
+//            vignetteFilter.radius = 1.0
             return vignetteFilter.outputImage
         }
+        
+        // 3. Add a vignette effect
+//        pipeline.addFilter { image in
+//            guard let image = image else { return nil }
+//            let vignetteFilter = CIFilter.vignette()
+//            vignetteFilter.inputImage = image
+//            vignetteFilter.intensity = 0.7
+//            vignetteFilter.radius = 1.0
+//            return vignetteFilter.outputImage
+//        }
+        
         return pipeline
     }
     static func peopleSegmentation(filter: CIPersonSegmentation) -> ImageProcessingHandler {
@@ -147,10 +144,6 @@ struct CoreMLHelper {
         let maskScaleY = foreground.extent.height / mask.extent.height
         let maskScaled = mask.transformed(
             by: __CGAffineTransformMake(maskScaleX, 0, 0, maskScaleY, 0, 0))
-
-        // 2
-        let backgroundScaleX = (foreground.extent.width / background.extent.width)
-        let backgroundScaleY = (foreground.extent.height / background.extent.height)
         // 3
         let blendFilter = isRedMask ? CIFilter.blendWithRedMask() : CIFilter.blendWithMask()
         let transparentBackground = background.cropped(to: foreground.extent)

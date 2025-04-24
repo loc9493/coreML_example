@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "static CoreMLHelper.applyMask(mask:to:):CoreMLHelper.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static CoreMLHelper.peopleSegmentation(imageBuffer:request:):CoreMLHelper.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CIFilterHelper.getAllCIFilters():CIFilterHelper.swift">
+      </ContextState>
+      <ContextState
+         contextName = "CameraViewModel.captureOutput(_:didOutput:from:):CameraViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "cgImage">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
