@@ -65,12 +65,9 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
                 }
             } else {
                 error = CameraError.cannotAddOutput
-                return
             }
-            
         } catch {
             self.error = error
-            return
         }
     }
     
@@ -99,13 +96,16 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer), let personSegmentationRequest else {
             return
         }
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         let context = CIContext(options: nil)
 //        let output = CoreMLHelper.peopleSegmentation(filter: personSegmentFilter)(ciImage)
-        let output = CoreMLHelper.peopleSegmentation(request: personSegmentationRequest)(ciImage)
+//        let output = CoreMLHelper.peopleSegmentation(request: personSegmentationRequest)(ciImage)
+        let pipeline = CoreMLHelper.createProcessingPipeline(with: personSegmentationRequest)
+        let output = pipeline.process(inputImage: ciImage)
         if let output, let cgImage = context.createCGImage(output, from: output.extent) {
             DispatchQueue.main.async {
                 self.segmentationMask = cgImage
@@ -145,10 +145,23 @@ struct CameraView: View {
                         .foregroundColor(.red)
                         .padding()
                 }
-                Button {
-                    self.selectedImage = ranges.randomElement() ?? ""
-                } label: {
-                    Text("Next")
+                VStack {
+                    
+                }
+                HStack {
+                    Button {
+                        self.selectedImage = ranges.randomElement() ?? ""
+                    } label: {
+                        Text("Next")
+                    }
+                    
+                    Button {
+                        let result = CoreMLHelper.getAllCIFilters()
+                        print(result)
+                    } label: {
+                        Text("Filters")
+                    }
+                    
                 }
 
             }
