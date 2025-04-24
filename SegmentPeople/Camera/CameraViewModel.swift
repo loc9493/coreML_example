@@ -16,13 +16,14 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     @Published var isSessionRunning = false
     @Published var error: Error?
     @Published var segmentationMask: CGImage?
-    
+    let ranges = (1...9).map { "IMG\($0)" }
+    @Published var selectedImage = "IMG8"
     let session = AVCaptureSession()
     let videoOutput = AVCaptureVideoDataOutput()
     let personSegmentFilter = CIFilter.personSegmentation()
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var personSegmentationRequest: VNGeneratePersonSegmentationRequest?
-    var pipeline: ImageFilterPipeline? = nil
+    @Published var pipeline: ImageFilterPipeline? = nil
     override init() {
         super.init()
         setupVision()
@@ -34,6 +35,10 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
         personSegmentationRequest?.qualityLevel = .balanced
         personSegmentationRequest?.outputPixelFormat = kCVPixelFormatType_OneComponent8
         pipeline = CoreMLHelper.createProcessingPipeline(with: personSegmentationRequest!)
+    }
+    
+    func addPeopleSegmentFilter() {
+        pipeline?.addFilter(CoreMLHelper.peopleSegmentation(request: personSegmentationRequest!))
     }
     
     private func setupSession() {

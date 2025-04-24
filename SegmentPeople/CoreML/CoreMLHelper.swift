@@ -80,16 +80,16 @@ struct CoreMLHelper {
 //            return sepiaFilter.outputImage
 //        }
         // 3. Add a vignette effect
-        pipeline.addFilter { image in
-            guard let image = image else { return nil }
-            let vignetteFilter = CIFilter.zoomBlur()
-            vignetteFilter.inputImage = image
-            vignetteFilter.setValue(30, forKey: "inputAmount")
-            vignetteFilter.setValue(CIVector(x: 350, y: 200), forKey: "inputCenter")
-//            vignetteFilter.center = .init(x: 200, y: 500)
-//            vignetteFilter.radius = 1.0
-            return vignetteFilter.outputImage
-        }
+//        pipeline.addFilter { image in
+//            guard let image = image else { return nil }
+//            let vignetteFilter = CIFilter.zoomBlur()
+//            vignetteFilter.inputImage = image
+//            vignetteFilter.setValue(30, forKey: "inputAmount")
+//            vignetteFilter.setValue(CIVector(x: 350, y: 200), forKey: "inputCenter")
+////            vignetteFilter.center = .init(x: 200, y: 500)
+////            vignetteFilter.radius = 1.0
+//            return vignetteFilter.outputImage
+//        }
         
         // 3. Add a vignette effect
 //        pipeline.addFilter { image in

@@ -9,10 +9,11 @@ import SwiftUI
 
 struct CIFilterView: View {
     @StateObject var viewModel: ViewModel = .init()
+    @Binding var selectedFilter: FilterItem?
     var body: some View {
         VStack {
-            Text("SelectedFilter: \(viewModel.selectedFilter?.filterName)")
-            CIFilterItemList(filterList: viewModel.filterList, selectedFilter: $viewModel.selectedFilter)
+            Text("SelectedFilter: \(selectedFilter?.filterName)")
+            CIFilterItemList(filterList: viewModel.filterList, selectedFilter: $selectedFilter)
         }
         
     }
@@ -21,22 +22,28 @@ struct CIFilterView: View {
 struct CIFilterItemList: View {
     let filterList: [FilterItem]
     @Binding var selectedFilter: FilterItem?
+    private var columns: [GridItem] {
+        let columnsCount = Int(ceil(Double(filterList.count) / 3.0))
+        return Array(repeating: GridItem(.flexible(), spacing: 10), count: 2)
+    }
     var body: some View {
-        ScrollView(.horizontal) {
-            LazyHStack {
-                ForEach(filterList.indices) { index in
-                    let _ = print(index)
+        ScrollView(.vertical) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+                ForEach(filterList.indices, id: \.self) { index in
                     let filter = filterList[index]
                     let isSelected = selectedFilter?.filterNameType == filter.filterNameType
                     Button {
                         selectedFilter = filter
                     } label: {
                         Text(filter.filterName)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(minWidth: 80)
                     }
-                    .padding()
-                    .background(isSelected ? .primary : .secondary)
+                    .padding(8)
+                    .background(isSelected ? Color.primary : Color.secondary)
+                    .foregroundColor(isSelected ? Color.secondary : Color.primary)
                     .cornerRadius(8)
-
                 }
             }
         }
@@ -44,13 +51,12 @@ struct CIFilterItemList: View {
 }
 
 #Preview {
-    CIFilterView()
+    CIFilterView(selectedFilter: .constant(nil))
 }
 
 extension CIFilterView {
     class ViewModel: ObservableObject {
         var filterList: [FilterItem] = []
-        @Published var selectedFilter: FilterItem? = nil
         init() {
             filterList = CIFilterHelper().getAllCIFilters()
         }

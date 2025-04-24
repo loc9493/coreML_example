@@ -8,33 +8,38 @@
 import SwiftUI
 
 struct CameraView: View {
-    @StateObject private var cameraViewModel = CameraViewModel()
-    let ranges = (1...9).map { "IMG\($0)" }
-    @State var selectedImage = "IMG8"
+    @ObservedObject var viewModel: CameraViewModel
     var body: some View {
         VStack {
             ZStack {
-                if cameraViewModel.isSessionRunning {
-                    CameraPreview(session: cameraViewModel.session)
+                if viewModel.isSessionRunning {
+                    CameraPreview(session: viewModel.session)
+                    Spacer()
                 }
                 
-                if let error = cameraViewModel.error {
+                if let error = viewModel.error {
                     Text("Camera Error: \(error.localizedDescription)")
                         .foregroundColor(.red)
                         .padding()
                 }
-                VStack {
-                    
-                }
                 HStack {
                     Button {
-                        self.selectedImage = ranges.randomElement() ?? ""
+                        self.viewModel.selectedImage = viewModel.ranges.randomElement() ?? ""
                     } label: {
                         Text("Next")
                     }
                     
                     Button {
-                        let result = CIFilterHelper().getAllCIFilters()
+                        viewModel.pipeline?.addFilter { image in
+                            guard let image = image else { return nil }
+                            let vignetteFilter = CIFilter.zoomBlur()
+                            vignetteFilter.inputImage = image
+                            vignetteFilter.setValue(30, forKey: "inputAmount")
+                            vignetteFilter.setValue(CIVector(x: 350, y: 200), forKey: "inputCenter")
+                //            vignetteFilter.center = .init(x: 200, y: 500)
+                //            vignetteFilter.radius = 1.0
+                            return vignetteFilter.outputImage
+                        }
                     } label: {
                         Text("Filters")
                     }
@@ -45,11 +50,11 @@ struct CameraView: View {
             .frame(maxWidth: .infinity, minHeight: 300)
             AdvancedDraggableResizableView {
                 ZStack {
-                    Image(selectedImage)
+                    Image(viewModel.selectedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                     VStack {
-                        if let mask = cameraViewModel.segmentationMask {
+                        if let mask = viewModel.segmentationMask {
                             Image(mask, scale: 1.0, label: Text("Segmentation Mask"))
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
@@ -61,14 +66,14 @@ struct CameraView: View {
             }
         }
         .onAppear {
-            cameraViewModel.startSession()
+            viewModel.startSession()
         }
         .onDisappear {
-            cameraViewModel.stopSession()
+            viewModel.stopSession()
         }
     }
 }
 
 #Preview {
-    CameraView()
+    CameraView(viewModel: .init())
 }
