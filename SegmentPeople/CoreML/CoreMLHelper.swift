@@ -69,7 +69,7 @@ struct CoreMLHelper {
         // Add filters in the desired order
         
         // 1. Person segmentation filter
-        pipeline.addFilter(peopleSegmentation(request: segmentationRequest))
+//        pipeline.addFilter(peopleSegmentation(request: segmentationRequest))
         
         // 2. Add a sepia tone filter
 //        pipeline.addFilter { image in
@@ -126,6 +126,20 @@ struct CoreMLHelper {
                 let maskImage = CIImage(cvPixelBuffer: mask)
                 let resultImage = blendImages(foreground: ciImage, mask: maskImage)
                 return resultImage
+            } catch let error {
+                print(error)
+            }
+            return nil
+        }
+    }
+    
+    static func faceRectangleSegmentation(request: VNDetectFaceRectanglesRequest) -> ImageProcessingHandler {
+        return { ciImage in
+            guard let ciImage = ciImage, let pixelBuffer = ciImage.pixelBuffer else { return nil }
+            do {
+                let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .up, options: [:])
+                try handler.perform([request])
+                return ciImage
             } catch let error {
                 print(error)
             }

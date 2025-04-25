@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct AdvancedDraggableResizableView<Content: View>: View {
-    @State private var position = CGPoint(x: 100, y: 000)
-    @State private var size = CGSize(width: 200, height: 200)
+    @State private var position = CGPoint(x: 100, y: 100)
+    @State private var size = CGSize(width: 400, height: 200)
     @State private var isDragging = false
     @State private var isResizing = false
     @State private var lastDragPosition: CGPoint?

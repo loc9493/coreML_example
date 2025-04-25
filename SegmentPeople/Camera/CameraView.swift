@@ -12,15 +12,44 @@ struct CameraView: View {
     var body: some View {
         VStack {
             ZStack {
-                if viewModel.isSessionRunning {
-                    CameraPreview(session: viewModel.session)
-                    Spacer()
+                VStack {
+                    if viewModel.isSessionRunning {
+                        CameraPreview(session: viewModel.session)
+                        Spacer()
+                    }
+                    
+                    if let error = viewModel.error {
+                        Text("Camera Error: \(error.localizedDescription)")
+                            .foregroundColor(.red)
+                            .padding()
+                    }
                 }
-                
-                if let error = viewModel.error {
-                    Text("Camera Error: \(error.localizedDescription)")
-                        .foregroundColor(.red)
-                        .padding()
+                AdvancedDraggableResizableView {
+                    ZStack {
+                        Image(viewModel.selectedImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        VStack {
+                            if let mask = viewModel.segmentationMask {
+                                Image(mask, scale: 1.0, label: Text("Segmentation Mask"))
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .border(.red, width: 1)
+                                    .overlay {
+                                        GeometryReader { proxy in
+                                            let _ = print(proxy)
+                                            let x = viewModel.faceBox.origin.x.scaled(by: proxy.size.width)
+                                            let y = viewModel.faceBox.origin.y.scaled(by: proxy.size.height)
+                                            Rectangle()
+                                                .position(x: x, y:y)
+                                                .frame(width: viewModel.faceBox.width*proxy.size.width, height: viewModel.faceBox.height*proxy.size.height)
+                                                .background(.red.opacity(0.2))
+                                        }
+                                    }
+                            }
+                            
+                        }
+                    }
                 }
                 HStack {
                     Button {
@@ -47,23 +76,8 @@ struct CameraView: View {
                 }
 
             }
-            .frame(maxWidth: .infinity, minHeight: 300)
-            AdvancedDraggableResizableView {
-                ZStack {
-                    Image(viewModel.selectedImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                    VStack {
-                        if let mask = viewModel.segmentationMask {
-                            Image(mask, scale: 1.0, label: Text("Segmentation Mask"))
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .border(.red, width: 1)
-                        }
-                        
-                    }
-                }
-            }
+            .frame(maxWidth: .infinity, minHeight: 300, alignment: .top)
+            
         }
         .onAppear {
             viewModel.startSession()

@@ -165,6 +165,23 @@ enum CIFilterValueHelper {
     // }
 }
 struct CIFilterHelper {
+    static func drawRectOnCIImage(inputImage: CIImage, rect: CGRect, color: CIColor) -> CIImage? {
+        // Create the rectangle as a colored CIImage
+        let colorFilter = CIFilter(name: "CIConstantColorGenerator")!
+        colorFilter.setValue(color, forKey: kCIInputColorKey)
+        guard var rectangleImage = colorFilter.outputImage else { return nil }
+        
+        // Crop the color image to the rectangle size and position
+        rectangleImage = rectangleImage.cropped(to: rect)
+        
+        // Compose the rectangle over the original image
+        let compositeFilter = CIFilter(name: "CISourceOverCompositing")!
+        compositeFilter.setValue(rectangleImage, forKey: kCIInputImageKey)
+        compositeFilter.setValue(inputImage, forKey: kCIInputBackgroundImageKey)
+        
+        return compositeFilter.outputImage
+    }
+    
     func getAllCIFilters() -> [FilterItem] {
         // Get all filter names
         let filterNames = CIFilter.filterNames(inCategory: nil)

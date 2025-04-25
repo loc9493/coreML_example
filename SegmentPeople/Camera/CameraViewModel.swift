@@ -18,11 +18,13 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     @Published var segmentationMask: CGImage?
     let ranges = (1...9).map { "IMG\($0)" }
     @Published var selectedImage = "IMG8"
+    @Published var faceBox = CGRectZero
     let session = AVCaptureSession()
     let videoOutput = AVCaptureVideoDataOutput()
     let personSegmentFilter = CIFilter.personSegmentation()
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var personSegmentationRequest: VNGeneratePersonSegmentationRequest?
+    private var faceSegmentationRequest: VNDetectFaceRectanglesRequest?
     @Published var pipeline: ImageFilterPipeline? = nil
     override init() {
         super.init()
@@ -34,7 +36,16 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
         personSegmentationRequest = VNGeneratePersonSegmentationRequest()
         personSegmentationRequest?.qualityLevel = .balanced
         personSegmentationRequest?.outputPixelFormat = kCVPixelFormatType_OneComponent8
+        faceSegmentationRequest = .init(completionHandler: { [weak self] request, error in
+            if let result = request.results?.first as? VNFaceObservation {
+                DispatchQueue.main.async {
+                    self?.faceBox = result.boundingBox                    
+                }
+            }
+        })
         pipeline = CoreMLHelper.createProcessingPipeline(with: personSegmentationRequest!)
+        pipeline?.reset()
+        pipeline?.addFilter(CoreMLHelper.faceRectangleSegmentation(request: faceSegmentationRequest!))
     }
     
     func addPeopleSegmentFilter() {
