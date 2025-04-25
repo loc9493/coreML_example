@@ -10,13 +10,15 @@ import AVFoundation
 
 struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
-    
+    let showPreview: Bool
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: UIScreen.main.bounds)
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer.videoGravity = .resizeAspectFill
         previewLayer.frame = view.layer.bounds
-//        view.layer.addSublayer(previewLayer)
+        if showPreview {
+            view.layer.addSublayer(previewLayer)            
+        }
         return view
     }
     
@@ -24,5 +26,5 @@ struct CameraPreview: UIViewRepresentable {
 }
 
 #Preview {
-    CameraPreview(session: .init())
+    CameraPreview(session: .init(), showPreview: false)
 }

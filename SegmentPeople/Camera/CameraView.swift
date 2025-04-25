@@ -14,7 +14,7 @@ struct CameraView: View {
             ZStack {
                 VStack {
                     if viewModel.isSessionRunning {
-                        CameraPreview(session: viewModel.session)
+                        CameraPreview(session: viewModel.session, showPreview: false)
                         Spacer()
                     }
                     
@@ -40,9 +40,11 @@ struct CameraView: View {
                                             let _ = print(proxy)
                                             let x = viewModel.faceBox.origin.x.scaled(by: proxy.size.width)
                                             let y = viewModel.faceBox.origin.y.scaled(by: proxy.size.height)
+                                            let width = viewModel.faceBox.width.scaled(by: proxy.size.height)
+                                            let height = viewModel.faceBox.height.scaled(by: proxy.size.height)
                                             Rectangle()
                                                 .position(x: x, y:y)
-                                                .frame(width: viewModel.faceBox.width*proxy.size.width, height: viewModel.faceBox.height*proxy.size.height)
+                                                .frame(width: width, height: height)
                                                 .background(.red.opacity(0.2))
                                         }
                                     }

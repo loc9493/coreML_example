@@ -11,7 +11,8 @@ import SwiftUI
 struct SegmentPeopleApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+//            ContentView()
+            FaceSegmentationView()
         }
     }
 }
