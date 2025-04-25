@@ -7,12 +7,16 @@
 
 import SwiftUI
 import Vision
+import SceneKit
 
 struct FaceSegmentationView: View {
     @StateObject var viewModel = CameraViewModel()
     let vnFaceRectRequest = VNDetectFaceRectanglesRequest()
     let faceLandmarksRequest = VNDetectFaceLandmarksRequest()
     @State var faceObservation: VNFaceObservation?
+    @State private var headNode: SCNNode?
+        @State private var sceneView = SCNView()
+        @State private var scene = SCNScene()
     var body: some View {
         VStack {
             if viewModel.session.isRunning {
@@ -23,6 +27,9 @@ struct FaceSegmentationView: View {
         .overlay(content: {
             faceLandmarkView
         })
+        .onAppear {
+            setupScene()
+        }
         .task {
             viewModel.startSession()
             //            viewModel.addPeopleSegmentFilter()
@@ -55,6 +62,10 @@ struct FaceSegmentationView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .border(.red, width: 1)
+                    .overlay(alignment: .center) {
+                        // Overlay for 3D head
+                        FaceSceneKitView(scene: scene, headNode: $headNode, faceObservation: faceObservation)
+                    }
                     .overlay {
                         if let face = faceObservation {
                             GeometryReader { proxy in
@@ -134,6 +145,53 @@ struct FaceSegmentationView: View {
                     }
             }
         }
+    }
+    
+    func setupScene() {
+        // Configure scene
+        scene.background.contents = UIColor.clear
+        
+        // Create camera
+        let camera = SCNCamera()
+        let cameraNode = SCNNode()
+        cameraNode.camera = camera
+        cameraNode.position = SCNVector3(0, 0, 10)
+        scene.rootNode.addChildNode(cameraNode)
+        
+        // Add ambient light
+        let ambientLight = SCNLight()
+        ambientLight.type = .ambient
+        ambientLight.intensity = 100
+        let ambientLightNode = SCNNode()
+        ambientLightNode.light = ambientLight
+        scene.rootNode.addChildNode(ambientLightNode)
+        
+        // Create 3D head model (simple example using a sphere)
+        // In a real application, you'd load a more detailed 3D model
+        let headGeometry = SCNSphere(radius: 0.5)
+        headGeometry.firstMaterial?.diffuse.contents = UIColor.cyan.withAlphaComponent(0.7)
+        
+        let headNode = SCNNode(geometry: headGeometry)
+        scene.rootNode.addChildNode(headNode)
+        self.headNode = headNode
+        
+        // Add facial features (simple spheres for eyes, nose)
+        let eyeGeometry = SCNSphere(radius: 0.1)
+        eyeGeometry.firstMaterial?.diffuse.contents = UIColor.white
+        
+        let leftEyeNode = SCNNode(geometry: eyeGeometry)
+        leftEyeNode.position = SCNVector3(-0.2, 0.1, 0.4)
+        headNode.addChildNode(leftEyeNode)
+        
+        let rightEyeNode = SCNNode(geometry: eyeGeometry)
+        rightEyeNode.position = SCNVector3(0.2, 0.1, 0.4)
+        headNode.addChildNode(rightEyeNode)
+        
+        let noseGeometry = SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0.05)
+        noseGeometry.firstMaterial?.diffuse.contents = UIColor.red
+        let noseNode = SCNNode(geometry: noseGeometry)
+        noseNode.position = SCNVector3(0, -0.1, 0.4)
+        headNode.addChildNode(noseNode)
     }
 }
 
